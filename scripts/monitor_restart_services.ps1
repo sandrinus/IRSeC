@@ -9,3 +9,5 @@ foreach ($service in $services) {
         Write-Output "$service restarted at $(Get-Date)" | Out-File "C:\ServiceLogs\RestartLog.txt" -Append
     }
 }
+
+
