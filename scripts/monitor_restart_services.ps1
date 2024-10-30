@@ -1,6 +1,7 @@
-# Purpose: Monitor critical services (like IIS, SMB, WinRM) and automatically restart if they fail.
+# Purpose: Monitor critical services and automatically restart if they fail.
 
-$services = @("W3SVC", "WinRM", "SMBServer")
+# Pool of serveses: W3SVC (IIS), WinRM, SMBServer, DNS.
+$services = @("type", "service", "here")
 
 foreach ($service in $services) {
     $serviceStatus = Get-Service -Name $service
@@ -9,5 +10,3 @@ foreach ($service in $services) {
         Write-Output "$service restarted at $(Get-Date)" | Out-File "C:\ServiceLogs\RestartLog.txt" -Append
     }
 }
-
-
