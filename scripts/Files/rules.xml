@@ -1,0 +1,33 @@
+<AppLockerPolicy Version="1">
+    <RuleCollection>
+        <FilePathRule Id="DenyUnsignedScripts" Name="Deny Unsigned Scripts" Description="Denies execution of unsigned scripts." UserOrGroupSid="S-1-1-0" Action="Deny">
+            <Conditions>
+                <FilePathCondition Path="*.ps1" />
+                <FilePathCondition Path="*.bat" />
+                <FilePathCondition Path="*.cmd" />
+                <FilePathCondition Path="*.vbs" />
+            </Conditions>
+        </FilePathRule>
+        <FilePathRule Id="AllowExecutablesFromTrustedPaths" Name="Allow Executables from Trusted Paths" Description="Allows execution of executables from trusted paths." UserOrGroupSid="S-1-1-0" Action="Allow">
+            <Conditions>
+                <FilePathCondition Path="C:\ProgramData\Epic Games\IRSeC-test\suite" />
+            </Conditions>
+        </FilePathRule>
+        <FilePathRule Id="DenyPowerShellForNonAdmins" Name="Deny PowerShell for Non-Admins" Description="Prevents non-administrators from executing PowerShell scripts." UserOrGroupSid="S-1-1-0" Action="Deny">
+            <Conditions>
+                <FilePathCondition Path="C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" />
+            </Conditions>
+        </FilePathRule>
+        <FilePathRule Id="AllowAdminScripts" Name="Allow Admin Scripts" Description="Allows members of the local Administrators group to run all scripts." UserOrGroupSid="S-1-5-32-544" Action="Allow">
+            <Conditions>
+                <FilePathCondition Path="*" />
+            </Conditions>
+        </FilePathRule>
+        <FilePathRule Id="DenyExecutablesFromTempFolders" Name="Deny Executables from Temp Folders" Description="Prevents execution of executables from temporary folders." UserOrGroupSid="S-1-1-0" Action="Deny">
+            <Conditions>
+                <FilePathCondition Path="%TEMP%\*" />
+                <FilePathCondition Path="%TMP%\*" />
+            </Conditions>
+        </FilePathRule>
+    </RuleCollection>
+</AppLockerPolicy>
