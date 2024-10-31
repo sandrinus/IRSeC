@@ -1,22 +1,39 @@
 Import-Module ActiveDirectory  # Loads the Active Directory module to enable AD user management functions
 
-# Yo, so create CSV file in format that is listed below. You don't need to input all domains for each user (I hope).
-# It will check the domain at the beginning of the program and should input the domain name for you. Then it just runs.
-# If you need a pause for longer than 5 minutes, change it at the bottom. Button, bottom, bottun... screw it, I'm SCOTTISH!
-# I honestly don't know if it's even going to work
+# Yo, so create a usernames.txt file with each username on a new line.
+# The program will automatically retrieve the domain name, so you don’t need to include it for each user.
+# Passwords will be rotated from a separate password file (passwords.txt) every hour for added security.
+# If you need a pause for longer than 1 hour, you can change it at the bottom. 
+# Honestly, I don’t know if it’s even going to work, but I’m SCOTTISH and we’ll make it work!
+
+# USERNAMES EXAMPLE (usernames.txt):
+# wcyd
+# gdigdagda
+# ligma
+
+# PASSWORDS EXAMPLE (passwords.txt):
+# 1. EncryptedPassword1; DecryptedPassword1
+# 2. EncryptedPassword2; DecryptedPassword2
+# (This file will have 25 encrypted and decrypted passwords for rotation)
+
+# Sets the paths to the files containing usernames and password details
+$userListPath = "C:\example\usernames.txt"   # Text file with usernames, one per line
+$passwordFilePath = "C:\example\passwords.txt" # Text file with password pairs (e.g., [number. encrypted password; decrypted password])
+
+# Initial domain retrieval for consistency across users
+$domain = Get-ActiveDirectoryDomain
 
 
-#hends up add admin user name and use same password for it as for other users
-# CSV EXAMPLE:
-# Username,Password,Domain
-# jdoe,MySecurePassword1,example.com
-# asmith,AnotherPassword2,example.com
-# mwhite,YetAnotherPassword3,example.org
+# Placeholder for decryption function
+function Decrypt-Password {
+    param (
+        [string]$encryptedPassword
+    )
+    # TODO - implement decrypt lmao
+    return $encryptedPassword
+}
 
-# Sets the path to the CSV file containing user account details
-$userListPath = "C:\example\filename.csv"
-
-# Function to retrieve the AD domain if it's not specified in the CSV
+# Function to retrieve the AD domain if it's not specified in the user file
 function Get-ActiveDirectoryDomain {
     try {
         # Get the default AD domain for the current environment
@@ -28,111 +45,70 @@ function Get-ActiveDirectoryDomain {
     }
 }
 
-# Function to create an admin user
-function Create-AdminUser {
-    param (
-        [string]$AdminUsername = "AdminUser",         # Default admin username
-        [string]$AdminPassword = "SuperSecurePass1",  # Default admin password
-        [string]$AdminGroup = "Domain Admins"         # Group to add the admin user to
-    )
+# Function to retrieve and delete the next encrypted password from the password file
+function Get-NextPassword {
+    # Read the content of the password file
+    $passwordLines = Get-Content -Path $passwordFilePath
 
-    $password = ConvertTo-SecureString $AdminPassword -AsPlainText -Force
-    $domain = Get-ActiveDirectoryDomain
+    if ($passwordLines.Count -gt 0) {
+        # Take the first encrypted password from the file
+        $encryptedPassword = $passwordLines[0].Trim()
+        $decryptedPassword = Decrypt-Password -encryptedPassword $encryptedPassword
 
-    # Check if the admin user already exists
-    if (-not (Get-ADUser -Filter { SamAccountName -eq $AdminUsername })) {
-        # Create the admin user
-        New-ADUser -SamAccountName $AdminUsername `
-                   -UserPrincipalName "$AdminUsername@$domain" `
-                   -Name $AdminUsername `
-                   -GivenName "Admin" `
-                   -Surname "User" `
-                   -AccountPassword $password `
-                   -Enabled $true `
-                   -PassThru -ErrorAction Stop
+        # Delete the used password line from the file
+        $remainingLines = $passwordLines | Select-Object -Skip 1
+        $remainingLines | Set-Content -Path $passwordFilePath
 
-        Write-Host "Admin user $AdminUsername created successfully."
-
-        # Add the admin user to the specified group
-        Add-ADGroupMember -Identity $AdminGroup -Members $AdminUsername
-        Write-Host "Admin user $AdminUsername added to $AdminGroup."
+        return $decryptedPassword
     } else {
-        Write-Host "Admin user $AdminUsername already exists."
+        Write-Host "No more passwords available in the file."
+        exit
     }
 }
 
-# Check if domain information is missing and update CSV if necessary
-# If domain info is missing, it will try to use the default domain.
-function Update-CsvWithDomain {
-    # Get the current domain
-    $currentDomain = Get-ActiveDirectoryDomain
-    
-    # Read the CSV file
-    $userList = Import-Csv -Path $userListPath
-
-    # Check if any entries are missing the Domain field
-    $isUpdateNeeded = $userList | Where-Object { -not $_.Domain }
-
-    if ($isUpdateNeeded) {
-        # Add the domain to each user entry if the domain is missing
-        $updatedUserList = $userList | ForEach-Object {
-            if (-not $_.Domain) { $_.Domain = $currentDomain }
-            $_
-        }
-        
-        # Save the updated list back to the CSV file
-        $updatedUserList | Export-Csv -Path $userListPath -NoTypeInformation -Force
-        Write-Host "CSV file updated with domain: $currentDomain for all users."
-    } else {
-        Write-Host "All entries already contain domain information."
-    }
-}
-
-# Function to synchronize users
+# Function to create or update all users
 function Sync-Users {
-    # Reads user data from the CSV file. The CSV is expected to have columns: Username, Password, Domain
-    $userList = Import-Csv -Path $userListPath
+    # Reads the domain once and uses it for all users
+    $domain = Get-ActiveDirectoryDomain
+    $password = ConvertTo-SecureString (Get-NextPassword) -AsPlainText -Force
+    $userList = Get-Content -Path $userListPath
 
-    # Extracts usernames from the CSV file into a list for quick lookups
-    $usernamesFromCsv = $userList | Select-Object -ExpandProperty Username
-
-    # Loop through each entry in the CSV to ensure these users are in AD
-    foreach ($user in $userList) {
-        $username = $user.Username  # Retrieves the username
-        $password = ConvertTo-SecureString $user.Password -AsPlainText -Force  # Converts password to SecureString
-        $domain = $user.Domain  # Retrieves the domain for setting the UserPrincipalName
+    # Loop through each entry in the username file to ensure these users are in AD
+    foreach ($username in $userList) {
+        $username = $username.Trim()  # Retrieve and clean up each username
 
         # Checks if the user already exists in AD; if not, creates it
         if (-not (Get-ADUser -Filter { SamAccountName -eq $username })) {
             New-ADUser -SamAccountName $username `                          # Sets the user's logon name
-                       -UserPrincipalName "$username@$domain" `             # Sets login name using domain from CSV
+                       -UserPrincipalName "$username@$domain" `             # Sets login name using domain from variable
                        -Name $username `                                    # Sets full name of the user
                        -GivenName $username `                               # Sets first name
                        -Surname "User" `                                    # Sets last name as "User" (can be adjusted)
                        -AccountPassword $password `                         # Assigns the user’s password
                        -Enabled $true `                                     # Enables the user account
                        -PassThru -ErrorAction Stop                          # Returns user object on success, stops on error
+        } else {
+            # Update the password for the existing user
+            Set-ADUser -Identity $username -AccountPassword $password
+            Write-Host "Password updated for $username."
         }
     }
 
-    # Loop through each existing AD user and check if they are in the CSV list
+    # Loop through each existing AD user and check if they are in the username list
     Get-ADUser -Filter * | ForEach-Object {
         $adUser = $_.SamAccountName  # Gets the SAM account name of each user
 
-        # If the AD user is not found in the CSV, delete the account
-        if ($adUser -notin $usernamesFromCsv) {
+        # If the AD user is not found in the username list, delete the account
+        if ($adUser -notin $userList) {
             Remove-ADUser -Identity $adUser -Confirm:$false -ErrorAction Stop  # Deletes the user account without confirmation
-            Write-Host "User $adUser has been deleted as they were not in the CSV."
+            Write-Host "User $adUser has been deleted as they were not in the username list."
         }
     }
 }
 
-# Initial setup
-Update-CsvWithDomain  # Update CSV with domain if needed
-Create-AdminUser      # Create an admin user if it doesn't exist
 
-# Infinite loop to run the sync function every 5 minutes
+# Infinite loop to sync users and update passwords every hour
 while ($true) {
-    Sync-Users                                                              # Calls the function to synchronize users with the CSV file
-    Start-Sleep -Seconds 300                                                # Waits 300 seconds (5 minutes) before the next sync
+    Sync-Users                                                              # Calls the function to synchronize users with the username file
+    Start-Sleep -Seconds 1800                                               # Waits 1800 seconds (1/2 hour) before the next sync
 }
