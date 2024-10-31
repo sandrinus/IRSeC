@@ -1,6 +1,15 @@
 # Continue on error
 $ErrorActionPreference = 'silentlycontinue'
 
+#Disable CMD Interactive and CMD Inline 
+reg add HKEY_CURRENT_USER\SOFTWARE\Policies\Microsoft\Windows\System /v DisableCMD /t REG_DWORD /d 1 /f
+
+#Automatically exit CMD when opened
+reg add "HKEY_CURRENT_USER\Software\Microsoft\Command Processor" /v AutoRun /t REG_EXPAND_SZ /d "exit"
+
+#Disable Powershell v2
+Disable-WindowsOptionalFeature -Online -FeatureName MicrosoftWindowsPowerShellV2Root
+Disable-WindowsOptionalFeature -Online -FeatureName MicrosoftWindowsPowerShellV2
 # Require elevation for script run
 Write-Output "Elevating privileges for this process"
 Start-Process powershell.exe -ArgumentList "-Command { Start-Process powershell.exe -Verb RunAs }"
