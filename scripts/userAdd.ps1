@@ -1,16 +1,17 @@
 Import-Module ActiveDirectory  # Loads the Active Directory module to enable AD user management functions
 
-#Yo, so create csv file in format that is listed below. YOu don't need to input all domains for each users(I hope)
-#it will check domain in the begining of the program and should input domain name for you. then it's just runs.
-#if you need pause for longer then 5 min change it at the bottom bottum bottun fuck it i'm SCOTTISH!
-#I honetly don't know if it's even going to work 
+# Yo, so create CSV file in format that is listed below. You don't need to input all domains for each user (I hope).
+# It will check the domain at the beginning of the program and should input the domain name for you. Then it just runs.
+# If you need a pause for longer than 5 minutes, change it at the bottom. Button, bottom, bottun... screw it, I'm SCOTTISH!
+# I honestly don't know if it's even going to work
 
-#CSV EXAMPLE:
-#Username,Password,Domain
-#jdoe,MySecurePassword1,example.com
-#asmith,AnotherPassword2,example.com
-#mwhite,YetAnotherPassword3,example.org
 
+#hends up add admin user name and use same password for it as for other users
+# CSV EXAMPLE:
+# Username,Password,Domain
+# jdoe,MySecurePassword1,example.com
+# asmith,AnotherPassword2,example.com
+# mwhite,YetAnotherPassword3,example.org
 
 # Sets the path to the CSV file containing user account details
 $userListPath = "C:\example\filename.csv"
@@ -27,12 +28,45 @@ function Get-ActiveDirectoryDomain {
     }
 }
 
+# Function to create an admin user
+function Create-AdminUser {
+    param (
+        [string]$AdminUsername = "AdminUser",         # Default admin username
+        [string]$AdminPassword = "SuperSecurePass1",  # Default admin password
+        [string]$AdminGroup = "Domain Admins"         # Group to add the admin user to
+    )
+
+    $password = ConvertTo-SecureString $AdminPassword -AsPlainText -Force
+    $domain = Get-ActiveDirectoryDomain
+
+    # Check if the admin user already exists
+    if (-not (Get-ADUser -Filter { SamAccountName -eq $AdminUsername })) {
+        # Create the admin user
+        New-ADUser -SamAccountName $AdminUsername `
+                   -UserPrincipalName "$AdminUsername@$domain" `
+                   -Name $AdminUsername `
+                   -GivenName "Admin" `
+                   -Surname "User" `
+                   -AccountPassword $password `
+                   -Enabled $true `
+                   -PassThru -ErrorAction Stop
+
+        Write-Host "Admin user $AdminUsername created successfully."
+
+        # Add the admin user to the specified group
+        Add-ADGroupMember -Identity $AdminGroup -Members $AdminUsername
+        Write-Host "Admin user $AdminUsername added to $AdminGroup."
+    } else {
+        Write-Host "Admin user $AdminUsername already exists."
+    }
+}
+
 # Check if domain information is missing and update CSV if necessary
-# If don't have domain yet it will try to check default domain. if it can't find domain good luck i finding it yourself 
+# If domain info is missing, it will try to use the default domain.
 function Update-CsvWithDomain {
     # Get the current domain
     $currentDomain = Get-ActiveDirectoryDomain
-
+    
     # Read the CSV file
     $userList = Import-Csv -Path $userListPath
 
@@ -83,15 +117,19 @@ function Sync-Users {
 
     # Loop through each existing AD user and check if they are in the CSV list
     Get-ADUser -Filter * | ForEach-Object {
-        #SamAccountName -> used to uniquely identify and manage user accounts within scripts
-        $adUser = $_.SamAccountName                                         # Gets the SAM account name of each user
+        $adUser = $_.SamAccountName  # Gets the SAM account name of each user
 
         # If the AD user is not found in the CSV, delete the account
         if ($adUser -notin $usernamesFromCsv) {
             Remove-ADUser -Identity $adUser -Confirm:$false -ErrorAction Stop  # Deletes the user account without confirmation
+            Write-Host "User $adUser has been deleted as they were not in the CSV."
         }
     }
 }
+
+# Initial setup
+Update-CsvWithDomain  # Update CSV with domain if needed
+Create-AdminUser      # Create an admin user if it doesn't exist
 
 # Infinite loop to run the sync function every 5 minutes
 while ($true) {
