@@ -29,5 +29,30 @@
                 <FilePathCondition Path="%TMP%\*" />
             </Conditions>
         </FilePathRule>
+        <FilePathRule Id="DenyScriptsFromUserFolders" Name="Deny Scripts from User Folders" Description="Prevents execution of scripts from user folders." UserOrGroupSid="S-1-1-0" Action="Deny">
+            <Conditions>
+                <FilePathCondition Path="%USERPROFILE%\Downloads\*.ps1" />
+                <FilePathCondition Path="%USERPROFILE%\Desktop\*.ps1" />
+                <FilePathCondition Path="%USERPROFILE%\Documents\*.ps1" />
+                <FilePathCondition Path="%USERPROFILE%\Downloads\*.bat" />
+                <FilePathCondition Path="%USERPROFILE%\Desktop\*.bat" />
+                <FilePathCondition Path="%USERPROFILE%\Documents\*.bat" />
+            </Conditions>
+        </FilePathRule>
+        <FilePathRule Id="DenyPowerShellScriptsForStandardUsers" Name="Deny PowerShell Scripts for Standard Users" Description="Prevents standard users from executing PowerShell scripts." UserOrGroupSid="S-1-1-0" Action="Deny">
+            <Conditions>
+                <FilePathCondition Path="*.ps1" />
+            </Conditions>
+        </FilePathRule>
+        <FilePathRule Id="DenySensitiveOperations" Name="Deny Sensitive Operations for Non-Admins" Description="Prevents non-admins from accessing sensitive directories." UserOrGroupSid="S-1-1-0" Action="Deny">
+            <Conditions>
+                <FilePathCondition Path="C:\Windows\System32\*" />
+                <FilePathCondition Path="C:\Program Files\*" />
+            </Conditions>
+        </FilePathRule>
+
+
+
+
     </RuleCollection>
 </AppLockerPolicy>
