@@ -50,9 +50,5 @@
                 <FilePathCondition Path="C:\Program Files\*" />
             </Conditions>
         </FilePathRule>
-
-
-
-
     </RuleCollection>
 </AppLockerPolicy>
