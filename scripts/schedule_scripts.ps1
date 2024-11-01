@@ -2,7 +2,7 @@
 
 # Array of paths to the scripts you want to run
 $scriptPaths = @(
-    "C:\ProgramData\Steam\CSGO\suite"
+    "C:\ProgramData\Epic Games\IRSeC\scripts"
 )
 
 # Define the base task name
