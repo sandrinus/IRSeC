@@ -20,6 +20,3 @@ Get-Service -Name AppIdsvc | Format-List St*
 #Print Conf
 Write-Host "Printing AppLocker Active Rule Categories"
 Get-AppLockerPolicy -Local
-
-#Test Block Rules
-#Get-AppLockerPolicy -Local | Test-AppLockerPolicy -Path C:\Windows\System32\*.exe -User Everyone | Where-Object {$_.PolicyDecision -eq "Denied"}
