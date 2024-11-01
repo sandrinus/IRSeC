@@ -96,5 +96,9 @@
             </Conditions>
         </FilePathRule>
         <FilePathRule Id="963a67e7-0518-4cbb-9249-c9a335cbcfe1" Name="Allow Admin Scripts" Description="Allows members of the Domain Admins group to run all scripts." UserOrGroupSid="{REPLACE_WITH_SID}" Action="Allow">
+            <Conditions>
+                <FilePathCondition Path="*" />
+            </Conditions>
+        </FilePathRule>
     </RuleCollection>
 </AppLockerPolicy>
