@@ -17,15 +17,14 @@ Set-ItemProperty -Path $AdminKeyPath -Name "AutoAdminLogon" -Value "0" -Force
 # Set RDP to allow only specific users
 $RDPUsersGroup = "Remote Desktop Users"
 try {
-    $Group = New-LocalGroup -Name $RDPUsersGroup -ErrorAction Stop
+    New-LocalGroup -Name $RDPUsersGroup -ErrorAction Stop
 } catch {
     Write-Output "Remote Desktop Users group already exists."
 }
 
-# TODO: Add a specific user to the Remote Desktop Users group
-# Add a specific user to the Remote Desktop Users group
-$UserName = "YourUserName" # Change this to the actual username
-Add-LocalGroupMember -Group $RDPUsersGroup -Member $UserName
+# Add the current user to the Remote Desktop Users group
+$CurrentUser = [System.Security.Principal.WindowsIdentity]::GetCurrent().Name
+Add-LocalGroupMember -Group $RDPUsersGroup -Member $CurrentUser
 
 # Configure RDP to log off idle sessions after 15 minutes
 $IdleSessionKeyPath = "HKLM:\SOFTWARE\Microsoft\Windows NT\CurrentVersion\Terminal Server"
