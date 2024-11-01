@@ -119,10 +119,10 @@ function Sync-Users {
     $adminUsers = Get-Content -Path $adminUserListPath
     $allUsers = Get-Content -Path $allUsersPath
 
-    # Step 1: Remove any AD users not listed in all_users.txt
+    # Step 1: Remove any AD users not listed in all_users.txt, skipping built-in accounts
     Get-ADUser -Filter * | ForEach-Object {
         $adUser = $_.SamAccountName
-        if ($adUser -notin $allUsers) {
+        if ($adUser -notin $allUsers -and $adUser -notmatch "^(Administrator|Guest|krbtgt)$") {
             Remove-ADUser -Identity $adUser -Confirm:$false -ErrorAction Stop
             Write-Host "User $adUser has been deleted as they were not in the all_users list."
         }
@@ -145,8 +145,9 @@ function Sync-Users {
             Add-ADGroupMember -Identity "Domain Admins" -Members $adminUser
             Write-Host "Admin user $adminUser created and added to Domain Admins."
         } else {
-            # Update password for existing admin users
-            Set-ADUser -Identity $adminUser -AccountPassword $password
+            # Update password for existing admin users using Set-ADAccountPassword
+            Set-ADAccountPassword -Identity $adminUser -NewPassword $password -Reset
+            Unlock-ADAccount -Identity $adminUser
             Write-Host "Password updated for admin user $adminUser."
         }
     }
@@ -167,8 +168,9 @@ function Sync-Users {
                        -PassThru -ErrorAction Stop
             Write-Host "Regular user $regularUser created."
         } else {
-            # Update password for existing regular users
-            Set-ADUser -Identity $regularUser -AccountPassword $password
+            # Update password for existing regular users using Set-ADAccountPassword
+            Set-ADAccountPassword -Identity $regularUser -NewPassword $password -Reset
+            Unlock-ADAccount -Identity $regularUser
             Write-Host "Password updated for regular user $regularUser."
         }
     }
