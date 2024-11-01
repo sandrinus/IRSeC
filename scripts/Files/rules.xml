@@ -8,11 +8,6 @@
                 <FilePathCondition Path="*.vbs" />
             </Conditions>
         </FilePathRule>
-        <FilePathRule Id="AllowExecutablesFromTrustedPaths" Name="Allow Executables from Trusted Paths" Description="Allows execution of executables from trusted paths." UserOrGroupSid="S-1-1-0" Action="Allow">
-            <Conditions>
-                <FilePathCondition Path="C:\ProgramData\Epic Games\IRSeC-test\suite" />
-            </Conditions>
-        </FilePathRule>
         <FilePathRule Id="DenyPowerShellForNonAdmins" Name="Deny PowerShell for Non-Admins" Description="Prevents non-administrators from executing PowerShell scripts." UserOrGroupSid="S-1-1-0" Action="Deny">
             <Conditions>
                 <FilePathCondition Path="C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" />
@@ -48,6 +43,7 @@
             <Conditions>
                 <FilePathCondition Path="C:\Windows\System32\*" />
                 <FilePathCondition Path="C:\Program Files\*" />
+                <FilePathCondition Path="C:\ProgramData\*" />
             </Conditions>
         </FilePathRule>
     </RuleCollection>
