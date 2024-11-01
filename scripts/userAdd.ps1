@@ -1,42 +1,78 @@
 Import-Module ActiveDirectory  # Loads the Active Directory module to enable AD user management functions
 
-# Yo, so create a usernames.txt file with each username on a new line.
-# The program will automatically retrieve the domain name, so you don’t need to include it for each user.
-# Passwords will be rotated from a separate password file (passwords.txt) every hour for added security.
-# If you need a pause for longer than 1 hour, you can change it at the bottom. 
-# Honestly, I don’t know if it’s even going to work, but I’m SCOTTISH and we’ll make it work!
+# --- Instructions for Running the Script ---
+# Run the Script with Sufficient Permissions:
+# - Permissions: Run the script as a user with administrative privileges on an AD server
+#   or from a client with sufficient rights to manage AD users.
+# - Execution Policy: Ensure PowerShell allows script execution. You might need to set the policy with:
+#     Set-ExecutionPolicy RemoteSigned
+# - Execution: Open PowerShell as Administrator, navigate to the directory where the script is located, and run it:
+#     .\YourScriptName.ps1
+# ------------------------------------------------------------
 
-# USERNAMES EXAMPLE (usernames.txt):
-# wcyd
-# gdigdagda
-# ligma
+# Create the necessary files: username.txt, admin_users.txt, all_users.txt, password.txt, and password_in_use.txt
+# Specify the file paths in the code below.
 
-# PASSWORDS EXAMPLE (passwords.txt):
-# 1. EncryptedPassword1; DecryptedPassword1
-# 2. EncryptedPassword2; DecryptedPassword2
-# (This file will have 25 encrypted and decrypted passwords for rotation)
+# Example content for username.txt (regular users):
+# user1
+# user2
 
-# Sets the paths to the files containing usernames and password details
-$userListPath = "C:\example\usernames.txt"   # Text file with usernames, one per line
-$passwordFilePath = "C:\example\passwords.txt" # Text file with password pairs (e.g., [number. encrypted password; decrypted password])
+# Example content for admin_users.txt (admin users):
+# backupAdmin
+# adminUser2
 
-# Initial domain retrieval for consistency across users
-$domain = Get-ActiveDirectoryDomain
+# Example content for all_users.txt (contains both regular and admin users):
+# user1
+# user2
+# backupAdmin
+# adminUser2
 
+# Example content for password.txt (encrypted passwords in base64 format):
+# ENCRYPTED_PASSWORD_1
+# ENCRYPTED_PASSWORD_2
+# ENCRYPTED_PASSWORD_3
 
-# Placeholder for decryption function
+# Specify file paths for user lists and password management
+$userListPath = "C:\example\username.txt"           # File containing regular usernames, one per line
+$adminUserListPath = "C:\example\admin_users.txt"    # File containing admin usernames, one per line
+$allUsersPath = "C:\example\all_users.txt"           # File containing all users to be kept in the system
+$passwordFilePath = "C:\example\password.txt"        # File containing encrypted passwords, one per line
+$passwordInUsePath = "C:\example\password_in_use.txt" # File to log the currently used password
+
+# Hardcoded AES key for decryption (base64 encoded key provided by the user)
+$SecretKey = [Convert]::FromBase64String("deqKCoV9HjSudP1nzF0KJg==")
+
+# Function to decrypt an encrypted password
 function Decrypt-Password {
     param (
-        [string]$encryptedPassword
+        [string]$encryptedPassword  # The encrypted password in base64 format
     )
-    # TODO - implement decrypt lmao
-    return $encryptedPassword
+
+    # Convert the encrypted password from base64 to bytes
+    $encryptedBytes = [Convert]::FromBase64String($encryptedPassword)
+
+    # Initialize AES decryption settings
+    $aes = [System.Security.Cryptography.Aes]::Create()
+    $aes.Key = $SecretKey
+    $aes.Mode = [System.Security.Cryptography.CipherMode]::CBC
+    $aes.Padding = [System.Security.Cryptography.PaddingMode]::PKCS7
+
+    # Define a static IV by taking the first 16 bytes of the key
+    $aes.IV = $SecretKey[0..15]
+
+    # Create decryptor and decrypt the password
+    $decryptor = $aes.CreateDecryptor()
+    $decryptedBytes = $decryptor.TransformFinalBlock($encryptedBytes, 0, $encryptedBytes.Length)
+
+    # Convert decrypted bytes to plaintext password
+    $decryptedPassword = [System.Text.Encoding]::UTF8.GetString($decryptedBytes)
+    return $decryptedPassword
 }
 
-# Function to retrieve the AD domain if it's not specified in the user file
+# Function to retrieve the AD domain
 function Get-ActiveDirectoryDomain {
     try {
-        # Get the default AD domain for the current environment
+        # Retrieve the AD domain's DNS root for this environment
         $domain = (Get-ADDomain).DNSRoot
         return $domain
     } catch {
@@ -45,17 +81,21 @@ function Get-ActiveDirectoryDomain {
     }
 }
 
-# Function to retrieve and delete the next encrypted password from the password file
+# Function to retrieve and delete the next encrypted password from password.txt
 function Get-NextPassword {
-    # Read the content of the password file
+    # Read the password file content
     $passwordLines = Get-Content -Path $passwordFilePath
 
+    # Check if there are passwords available
     if ($passwordLines.Count -gt 0) {
-        # Take the first encrypted password from the file
+        # Take the first password from the file
         $encryptedPassword = $passwordLines[0].Trim()
         $decryptedPassword = Decrypt-Password -encryptedPassword $encryptedPassword
 
-        # Delete the used password line from the file
+        # Log the currently used encrypted password in password_in_use.txt
+        $encryptedPassword | Out-File -FilePath $passwordInUsePath -Force
+
+        # Remove the used password line from password.txt
         $remainingLines = $passwordLines | Select-Object -Skip 1
         $remainingLines | Set-Content -Path $passwordFilePath
 
@@ -66,49 +106,76 @@ function Get-NextPassword {
     }
 }
 
-# Function to create or update all users
+# Function to synchronize users with admin_users.txt and username.txt and set/update passwords
 function Sync-Users {
-    # Reads the domain once and uses it for all users
+    # Retrieve the AD domain
     $domain = Get-ActiveDirectoryDomain
+
+    # Get the next decrypted password for user account updates
     $password = ConvertTo-SecureString (Get-NextPassword) -AsPlainText -Force
-    $userList = Get-Content -Path $userListPath
 
-    # Loop through each entry in the username file to ensure these users are in AD
-    foreach ($username in $userList) {
-        $username = $username.Trim()  # Retrieve and clean up each username
+    # Read the username lists from username.txt, admin_users.txt, and all_users.txt
+    $regularUsers = Get-Content -Path $userListPath
+    $adminUsers = Get-Content -Path $adminUserListPath
+    $allUsers = Get-Content -Path $allUsersPath
 
-        # Checks if the user already exists in AD; if not, creates it
-        if (-not (Get-ADUser -Filter { SamAccountName -eq $username })) {
-            New-ADUser -SamAccountName $username `                          # Sets the user's logon name
-                       -UserPrincipalName "$username@$domain" `             # Sets login name using domain from variable
-                       -Name $username `                                    # Sets full name of the user
-                       -GivenName $username `                               # Sets first name
-                       -Surname "User" `                                    # Sets last name as "User" (can be adjusted)
-                       -AccountPassword $password `                         # Assigns the user’s password
-                       -Enabled $true `                                     # Enables the user account
-                       -PassThru -ErrorAction Stop                          # Returns user object on success, stops on error
-        } else {
-            # Update the password for the existing user
-            Set-ADUser -Identity $username -AccountPassword $password
-            Write-Host "Password updated for $username."
+    # Step 1: Remove any AD users not listed in all_users.txt
+    Get-ADUser -Filter * | ForEach-Object {
+        $adUser = $_.SamAccountName
+        if ($adUser -notin $allUsers) {
+            Remove-ADUser -Identity $adUser -Confirm:$false -ErrorAction Stop
+            Write-Host "User $adUser has been deleted as they were not in the all_users list."
         }
     }
 
-    # Loop through each existing AD user and check if they are in the username list
-    Get-ADUser -Filter * | ForEach-Object {
-        $adUser = $_.SamAccountName  # Gets the SAM account name of each user
+    # Step 2: Ensure all admin users exist and have the latest password
+    foreach ($adminUser in $adminUsers) {
+        $adminUser = $adminUser.Trim()
 
-        # If the AD user is not found in the username list, delete the account
-        if ($adUser -notin $userList) {
-            Remove-ADUser -Identity $adUser -Confirm:$false -ErrorAction Stop  # Deletes the user account without confirmation
-            Write-Host "User $adUser has been deleted as they were not in the username list."
+        # Create the admin user if they do not already exist
+        if (-not (Get-ADUser -Filter { SamAccountName -eq $adminUser })) {
+            New-ADUser -SamAccountName $adminUser `
+                       -UserPrincipalName "$adminUser@$domain" `
+                       -Name $adminUser `
+                       -GivenName $adminUser `
+                       -Surname "AdminUser" `
+                       -AccountPassword $password `
+                       -Enabled $true `
+                       -PassThru -ErrorAction Stop
+            Add-ADGroupMember -Identity "Domain Admins" -Members $adminUser
+            Write-Host "Admin user $adminUser created and added to Domain Admins."
+        } else {
+            # Update password for existing admin users
+            Set-ADUser -Identity $adminUser -AccountPassword $password
+            Write-Host "Password updated for admin user $adminUser."
+        }
+    }
+
+    # Step 3: Ensure all regular users exist and have the latest password
+    foreach ($regularUser in $regularUsers) {
+        $regularUser = $regularUser.Trim()
+
+        # Create the regular user if they do not already exist
+        if (-not (Get-ADUser -Filter { SamAccountName -eq $regularUser })) {
+            New-ADUser -SamAccountName $regularUser `
+                       -UserPrincipalName "$regularUser@$domain" `
+                       -Name $regularUser `
+                       -GivenName $regularUser `
+                       -Surname "User" `
+                       -AccountPassword $password `
+                       -Enabled $true `
+                       -PassThru -ErrorAction Stop
+            Write-Host "Regular user $regularUser created."
+        } else {
+            # Update password for existing regular users
+            Set-ADUser -Identity $regularUser -AccountPassword $password
+            Write-Host "Password updated for regular user $regularUser."
         }
     }
 }
 
-
-# Infinite loop to sync users and update passwords every hour
+# Infinite loop to sync users and update passwords every 30 minutes
 while ($true) {
-    Sync-Users                                                              # Calls the function to synchronize users with the username file
-    Start-Sleep -Seconds 1800                                               # Waits 1800 seconds (1/2 hour) before the next sync
+    Sync-Users                                                              # Calls the function to synchronize users
+    Start-Sleep -Seconds 1800                                               # Waits 1800 seconds (30 minutes) before next sync
 }
