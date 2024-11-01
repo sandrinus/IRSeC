@@ -90,5 +90,10 @@
                 <FilePathCondition Path="C:\ProgramData\*" />
             </Conditions>
         </FilePathRule>
+        <FilePathRule Id="62cead33-b86f-489f-adbe-88367bdf8679" Name="Allow Unsigned Scripts for Admins" Description="Allows unsigned scripts for Administrators." UserOrGroupSid="S-1-5-32-544" Action="Allow">
+            <Conditions>
+                <FilePathCondition Path="*" />
+            </Conditions>
+        </FilePathRule>
     </RuleCollection>
 </AppLockerPolicy>
