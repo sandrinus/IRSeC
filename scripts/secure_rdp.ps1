@@ -22,6 +22,7 @@ try {
     Write-Output "Remote Desktop Users group already exists."
 }
 
+# TODO: Add a specific user to the Remote Desktop Users group
 # Add a specific user to the Remote Desktop Users group
 $UserName = "YourUserName" # Change this to the actual username
 Add-LocalGroupMember -Group $RDPUsersGroup -Member $UserName
