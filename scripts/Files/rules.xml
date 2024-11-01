@@ -1,5 +1,5 @@
 <AppLockerPolicy Version="1">
-    <RuleCollection Type="Script">
+    <RuleCollection Type="Script" EnforcementMode="Enabled">
         <FilePathRule Id="aece80d7-47c8-4a50-a3b1-5bbf1542db55" Name="Deny Unsigned Scripts" Description="Denies execution of unsigned scripts." UserOrGroupSid="S-1-1-0" Action="Deny">
             <Conditions>
                 <FilePathCondition Path="*.ps1" />
