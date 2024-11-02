@@ -1,5 +1,3 @@
-Import-Module ActiveDirectory  # Loads the Active Directory module to enable AD user management functions
-
 # --- Instructions for Running the Script ---
 # Run the Script with Sufficient Permissions:
 # - Run as Administrator: Local user management requires running PowerShell as Administrator.
@@ -13,11 +11,11 @@ Import-Module ActiveDirectory  # Loads the Active Directory module to enable AD 
 # Specify the file paths in the code below.
 
 # Specify file paths for user lists and password management
-$userListPath = "C:\example\username.txt"           # File containing regular usernames, one per line
-$adminUserListPath = "C:\example\admin_users.txt"    # File containing admin usernames, one per line
-$allUsersPath = "C:\example\all_users.txt"           # File containing all users to be kept in the system
-$passwordFilePath = "C:\example\password.txt"        # File containing encrypted passwords, one per line
-$passwordInUsePath = "C:\example\password_in_use.txt" # File to log the currently used password
+$userListPath = "C:\ProgramData\Epic Games\IRSeC-test\username.txt"           # File containing regular usernames, one per line
+$adminUserListPath = "C:\ProgramData\Epic Games\IRSeC-test\admin_users.txt"    # File containing admin usernames, one per line
+$allUsersPath = "C:\ProgramData\Epic Games\IRSeC-test\all_users.txt"           # File containing all users to be kept in the system
+$passwordFilePath = "C:\ProgramData\Epic Games\IRSeC-test\password.txt"        # File containing encrypted passwords, one per line
+$passwordInUsePath = "C:\ProgramData\Epic Games\IRSeC-test\password_in_use.txt" # File to log the currently used password
 
 # Hardcoded AES key for decryption (base64 encoded key provided by the user)
 $SecretKey = [Convert]::FromBase64String("deqKCoV9HjSudP1nzF0KJg==")
