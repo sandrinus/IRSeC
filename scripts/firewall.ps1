@@ -41,6 +41,10 @@ New-NetFirewallRule -DisplayName "Allow Netlogon" -Direction Inbound -Protocol T
 New-NetFirewallRule -DisplayName "Allow HTTP" -Direction Inbound -Protocol TCP -LocalPort 80 -Action Allow -Enabled True
 New-NetFirewallRule -DisplayName "Allow HTTPS" -Direction Inbound -Protocol TCP -LocalPort 443 -Action Allow -Enabled True
 
+# 5. SMB Windows Server - 192.168.7.3
+# Allow SMB (TCP 445)
+New-NetFirewallRule -DisplayName "Allow SMB" -Direction Inbound -Protocol TCP -LocalPort 445 -Action Allow -Enabled True
+
 # ============================
 # End of Firewall Rules
 # ============================
