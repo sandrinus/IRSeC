@@ -1,0 +1,10 @@
+president
+vicepresident
+defenseminister
+secretary
+general
+admiral
+judge
+bodyguard
+cabinetofficial
+treasurer

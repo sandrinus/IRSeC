@@ -1,0 +1,6 @@
+general
+admiral
+judge
+bodyguard
+cabinetofficial
+treasurer

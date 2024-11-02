@@ -1,0 +1,6 @@
+foreignaffairs
+intelofficer
+delegate
+advisor
+lobbyist
+aidworker
