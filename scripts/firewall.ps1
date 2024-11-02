@@ -36,6 +36,9 @@ New-NetFirewallRule -DisplayName "Allow Kerberos UDP" -Direction Inbound -Protoc
 # Allow Netlogon (TCP 445)
 New-NetFirewallRule -DisplayName "Allow Netlogon" -Direction Inbound -Protocol TCP -LocalPort 445 -Action Allow -Enabled True
 
+# Allow RDP (TCP 3389)
+New-NetFirewallRule -DisplayName "Allow RDP" -Direction Inbound -Protocol TCP -LocalPort 3389 -Action Allow -Enabled True
+
 # 4. Windows 10 (IIS) - 192.168.7.4
 # Allow HTTP (TCP 80) and HTTPS (TCP 443)
 New-NetFirewallRule -DisplayName "Allow HTTP" -Direction Inbound -Protocol TCP -LocalPort 80 -Action Allow -Enabled True
