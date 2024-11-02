@@ -1,3 +1,5 @@
+Import-Module ActiveDirectory  # Loads the Active Directory module to enable AD user management functions
+
 # --- Instructions for Running the Script ---
 # Run the Script with Sufficient Permissions:
 # - Run as Administrator: Local user management requires running PowerShell as Administrator.
@@ -11,11 +13,11 @@
 # Specify the file paths in the code below.
 
 # Specify file paths for user lists and password management
-$userListPath = "C:\ProgramData\Epic Games\IRSeC-test\username.txt"           # File containing regular usernames, one per line
-$adminUserListPath = "C:\ProgramData\Epic Games\IRSeC-test\admin_users.txt"    # File containing admin usernames, one per line
-$allUsersPath = "C:\ProgramData\Epic Games\IRSeC-test\all_users.txt"           # File containing all users to be kept in the system
-$passwordFilePath = "C:\ProgramData\Epic Games\IRSeC-test\password.txt"        # File containing encrypted passwords, one per line
-$passwordInUsePath = "C:\ProgramData\Epic Games\IRSeC-test\password_in_use.txt" # File to log the currently used password
+$userListPath = "C:\example\username.txt"           # File containing regular usernames, one per line
+$adminUserListPath = "C:\example\admin_users.txt"    # File containing admin usernames, one per line
+$allUsersPath = "C:\example\all_users.txt"           # File containing all users to be kept in the system
+$passwordFilePath = "C:\example\password.txt"        # File containing encrypted passwords, one per line
+$passwordInUsePath = "C:\example\password_in_use.txt" # File to log the currently used password
 
 # Hardcoded AES key for decryption (base64 encoded key provided by the user)
 $SecretKey = [Convert]::FromBase64String("deqKCoV9HjSudP1nzF0KJg==")
@@ -72,17 +74,12 @@ function Get-NextPassword {
     }
 }
 
-# Function to synchronize local users with admin_users.txt and username.txt and set/update passwords
-function Sync-LocalUsers {
-    # Get the next decrypted password for user account updates
-    $password = ConvertTo-SecureString (Get-NextPassword) -AsPlainText -Force
-
-    # Read the username lists from username.txt, admin_users.txt, and all_users.txt
-    $regularUsers = Get-Content -Path $userListPath
-    $adminUsers = Get-Content -Path $adminUserListPath
+# Function to remove any local users not listed in all_users.txt
+function Remove-UnlistedLocalUsers {
+    # Load all users from all_users.txt
     $allUsers = Get-Content -Path $allUsersPath
 
-    # Step 1: Remove any local users not listed in all_users.txt, skipping built-in accounts
+    # Iterate over each local user
     Get-LocalUser | ForEach-Object {
         $localUser = $_.Name
         if ($localUser -notin $allUsers -and $localUser -notmatch "^(Administrator|Guest)$") {
@@ -90,8 +87,21 @@ function Sync-LocalUsers {
             Write-Host "User $localUser has been deleted as they were not in the all_users list."
         }
     }
+}
 
-    # Step 2: Ensure all admin users exist and have the latest password
+# Function to synchronize local users with admin_users.txt and username.txt and set/update passwords
+function Sync-LocalUsers {
+    # First, remove any unlisted users by calling Remove-UnlistedLocalUsers
+    Remove-UnlistedLocalUsers
+
+    # Get the next decrypted password for user account updates
+    $password = ConvertTo-SecureString (Get-NextPassword) -AsPlainText -Force
+
+    # Read the username lists from username.txt and admin_users.txt
+    $regularUsers = Get-Content -Path $userListPath
+    $adminUsers = Get-Content -Path $adminUserListPath
+
+    # Step 1: Ensure all admin users exist and have the latest password
     foreach ($adminUser in $adminUsers) {
         $adminUser = $adminUser.Trim()
 
@@ -101,14 +111,14 @@ function Sync-LocalUsers {
             Add-LocalGroupMember -Group "Administrators" -Member $adminUser
             Write-Host "Admin user $adminUser created and added to Administrators."
         } else {
-            # Update password for existing admin users using Set-LocalUserPassword
+            # Update password for existing admin users
             $adminUserObject = Get-LocalUser -Name $adminUser
             $adminUserObject | Set-LocalUser -Password $password
             Write-Host "Password updated for admin user $adminUser."
         }
     }
 
-    # Step 3: Ensure all regular users exist and have the latest password
+    # Step 2: Ensure all regular users exist and have the latest password
     foreach ($regularUser in $regularUsers) {
         $regularUser = $regularUser.Trim()
 
@@ -117,7 +127,7 @@ function Sync-LocalUsers {
             New-LocalUser -Name $regularUser -Password $password -FullName $regularUser -Description "RegularUser" -ErrorAction Stop
             Write-Host "Regular user $regularUser created."
         } else {
-            # Update password for existing regular users using Set-LocalUserPassword
+            # Update password for existing regular users
             $regularUserObject = Get-LocalUser -Name $regularUser
             $regularUserObject | Set-LocalUser -Password $password
             Write-Host "Password updated for regular user $regularUser."
