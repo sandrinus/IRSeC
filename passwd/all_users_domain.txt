@@ -1,0 +1,10 @@
+representative
+senator
+attache
+ambassador
+foreignaffairs
+intelofficer
+delegate
+advisor
+lobbyist
+aidworker

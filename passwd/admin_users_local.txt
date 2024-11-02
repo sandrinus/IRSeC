@@ -1,0 +1,4 @@
+president
+vicepresident
+defenseminister
+secretary
