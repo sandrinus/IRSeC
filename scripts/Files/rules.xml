@@ -1,0 +1,104 @@
+<AppLockerPolicy Version="1">
+    <RuleCollection Type="Script" EnforcementMode="Enabled">
+        <FilePathRule Id="aece80d7-47c8-4a50-a3b1-5bbf1542db55" Name="Deny Unsigned PS1 Scripts" Description="Denies execution of unsigned PS1 scripts." UserOrGroupSid="S-1-1-0" Action="Deny">
+            <Conditions>
+                <FilePathCondition Path="*.ps1" />
+            </Conditions>
+        </FilePathRule>
+        <FilePathRule Id="aece80d7-47c8-4a50-a3b1-5bbf1542db56" Name="Deny Unsigned BAT Scripts" Description="Denies execution of unsigned BAT scripts." UserOrGroupSid="S-1-1-0" Action="Deny">
+            <Conditions>
+                <FilePathCondition Path="*.bat" />
+            </Conditions>
+        </FilePathRule>
+        <FilePathRule Id="aece80d7-47c8-4a50-a3b1-5bbf1542db57" Name="Deny Unsigned CMD Scripts" Description="Denies execution of unsigned CMD scripts." UserOrGroupSid="S-1-1-0" Action="Deny">
+            <Conditions>
+                <FilePathCondition Path="*.cmd" />
+            </Conditions>
+        </FilePathRule>
+        <FilePathRule Id="aece80d7-47c8-4a50-a3b1-5bbf1542db58" Name="Deny Unsigned VBS Scripts" Description="Denies execution of unsigned VBS scripts." UserOrGroupSid="S-1-1-0" Action="Deny">
+            <Conditions>
+                <FilePathCondition Path="*.vbs" />
+            </Conditions>
+        </FilePathRule>
+        <FilePathRule Id="3390cde6-8411-4383-896c-f20da8f66039" Name="Deny PowerShell for Non-Admins" Description="Prevents non-administrators from executing PowerShell scripts." UserOrGroupSid="S-1-1-0" Action="Deny">
+            <Conditions>
+                <FilePathCondition Path="C:\Windows\System32\WindowsPowerShell\v1.0\powershell.exe" />
+            </Conditions>
+        </FilePathRule>
+        <FilePathRule Id="633761c1-097b-48b0-bb30-791c0c0c93ac" Name="Allow Admin Scripts" Description="Allows members of the local Administrators group to run all scripts." UserOrGroupSid="S-1-5-32-544" Action="Allow">
+            <Conditions>
+                <FilePathCondition Path="*" />
+            </Conditions>
+        </FilePathRule>
+        <FilePathRule Id="0e159112-0ce1-4d60-a58a-164485dfb592" Name="Deny Executables from Temp Folders" Description="Prevents execution of executables from temporary folders." UserOrGroupSid="S-1-1-0" Action="Deny">
+            <Conditions>
+                <FilePathCondition Path="%TEMP%\*" />
+            </Conditions>
+        </FilePathRule>
+        <FilePathRule Id="0e159112-0ce1-4d60-a58a-164485dfb593" Name="Deny Executables from TMP Folders" Description="Prevents execution of executables from TMP folders." UserOrGroupSid="S-1-1-0" Action="Deny">
+            <Conditions>
+                <FilePathCondition Path="%TMP%\*" />
+            </Conditions>
+        </FilePathRule>
+        <FilePathRule Id="85db0498-a6ab-4c60-a9e1-2691b0d74760" Name="Deny Scripts from User Folders" Description="Prevents execution of scripts from user folders." UserOrGroupSid="S-1-1-0" Action="Deny">
+            <Conditions>
+                <FilePathCondition Path="%USERPROFILE%\Downloads\*.ps1" />
+            </Conditions>
+        </FilePathRule>
+        <FilePathRule Id="85db0498-a6ab-4c60-a9e1-2691b0d74761" Name="Deny Scripts from User Folders" Description="Prevents execution of scripts from user folders." UserOrGroupSid="S-1-1-0" Action="Deny">
+            <Conditions>
+                <FilePathCondition Path="%USERPROFILE%\Desktop\*.ps1" />
+            </Conditions>
+        </FilePathRule>
+        <FilePathRule Id="85db0498-a6ab-4c60-a9e1-2691b0d74762" Name="Deny Scripts from User Folders" Description="Prevents execution of scripts from user folders." UserOrGroupSid="S-1-1-0" Action="Deny">
+            <Conditions>
+                <FilePathCondition Path="%USERPROFILE%\Documents\*.ps1" />
+            </Conditions>
+        </FilePathRule>
+        <FilePathRule Id="85db0498-a6ab-4c60-a9e1-2691b0d74763" Name="Deny Scripts from User Folders" Description="Prevents execution of scripts from user folders." UserOrGroupSid="S-1-1-0" Action="Deny">
+            <Conditions>
+                <FilePathCondition Path="%USERPROFILE%\Downloads\*.bat" />
+            </Conditions>
+        </FilePathRule>
+        <FilePathRule Id="85db0498-a6ab-4c60-a9e1-2691b0d74764" Name="Deny Scripts from User Folders" Description="Prevents execution of scripts from user folders." UserOrGroupSid="S-1-1-0" Action="Deny">
+            <Conditions>
+                <FilePathCondition Path="%USERPROFILE%\Desktop\*.bat" />
+            </Conditions>
+        </FilePathRule>
+        <FilePathRule Id="85db0498-a6ab-4c60-a9e1-2691b0d74765" Name="Deny Scripts from User Folders" Description="Prevents execution of scripts from user folders." UserOrGroupSid="S-1-1-0" Action="Deny">
+            <Conditions>
+                <FilePathCondition Path="%USERPROFILE%\Documents\*.bat" />
+            </Conditions>
+        </FilePathRule>
+        <FilePathRule Id="47a5a19b-cae7-4452-829e-11bbd3ae7b54" Name="Deny PowerShell Scripts for Standard Users" Description="Prevents standard users from executing PowerShell scripts." UserOrGroupSid="S-1-1-0" Action="Deny">
+            <Conditions>
+                <FilePathCondition Path="*.ps1" />
+            </Conditions>
+        </FilePathRule>
+        <FilePathRule Id="e0cb3968-e9df-4086-a094-9a9cf1eff33c" Name="Deny Sensitive Operations for Non-Admins" Description="Prevents non-admins from accessing sensitive directories." UserOrGroupSid="S-1-1-0" Action="Deny">
+            <Conditions>
+                <FilePathCondition Path="C:\Windows\System32\*" />
+            </Conditions>
+        </FilePathRule>
+        <FilePathRule Id="e0cb3968-e9df-4086-a094-9a9cf1eff33d" Name="Deny Sensitive Operations for Non-Admins" Description="Prevents non-admins from accessing sensitive directories." UserOrGroupSid="S-1-1-0" Action="Deny">
+            <Conditions>
+                <FilePathCondition Path="C:\Program Files\*" />
+            </Conditions>
+        </FilePathRule>
+        <FilePathRule Id="e0cb3968-e9df-4086-a094-9a9cf1eff33e" Name="Deny Sensitive Operations for Non-Admins" Description="Prevents non-admins from accessing sensitive directories." UserOrGroupSid="S-1-1-0" Action="Deny">
+            <Conditions>
+                <FilePathCondition Path="C:\ProgramData\*" />
+            </Conditions>
+        </FilePathRule>
+        <FilePathRule Id="62cead33-b86f-489f-adbe-88367bdf8679" Name="Allow Unsigned Scripts for Admins" Description="Allows unsigned scripts for Administrators." UserOrGroupSid="S-1-5-32-544" Action="Allow">
+            <Conditions>
+                <FilePathCondition Path="*" />
+            </Conditions>
+        </FilePathRule>
+        <FilePathRule Id="963a67e7-0518-4cbb-9249-c9a335cbcfe1" Name="Allow Admin Scripts" Description="Allows members of the Domain Admins group to run all scripts." UserOrGroupSid="{REPLACE_WITH_SID}" Action="Allow">
+            <Conditions>
+                <FilePathCondition Path="*" />
+            </Conditions>
+        </FilePathRule>
+    </RuleCollection>
+</AppLockerPolicy>
