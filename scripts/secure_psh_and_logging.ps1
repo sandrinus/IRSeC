@@ -20,7 +20,7 @@ if (-not (Test-Path "HKLM:\Software\Policies\Microsoft\Windows\PowerShell\Transc
 }
 
 # Create the logging directory if it doesn't exist
-$logPath = "C:\PowershellLogs"
+$logPath = "C:\ProgramData\Blizzard\PowershellLogs"
 if (-not (Test-Path $logPath)) {
     New-Item -ItemType Directory -Path $logPath -Force
 }
