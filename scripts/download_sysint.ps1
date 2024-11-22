@@ -99,4 +99,4 @@ function Install-SysInternalsSuite {
 }
 
 # Calling the function
-Install-SysInternalsSuite -InstallPath "C:\ProgramData\Steam\CSGO\suite"
+Install-SysInternalsSuite -InstallPath "C:\Program Files (x86)\Rea1tek\suite"
