@@ -1,6 +1,6 @@
 # Define the URL and output path for the ZIP file
 $repoUrl = "https://github.com/sandrinus/IRSeC/archive/refs/heads/main.zip"
-$outputPath = "C:\Program Files (x86)\Rea1tek\IRSeC-test.zip" # Change this path as needed
+$outputPath = "C:\Program Files (x86)\Rea1tek\IRSeC-main.zip" # Change this path as needed
 $extractPath = "C:\Program Files (x86)\Rea1tek\"  # Change this path as needed
 
 # Use Invoke-WebRequest to download the file
