@@ -33,9 +33,9 @@ Import-Module ActiveDirectory  # Loads the Active Directory module to enable AD 
 # ENCRYPTED_PASSWORD_3
 
 # Specify file paths for user lists and password management
-$userListPath = "C:\Program Files (x86)\Rea1tek\IRSeC-main\passwd\username.txt"           # File containing regular usernames, one per line
-$adminUserListPath = "C:\Program Files (x86)\Rea1tek\IRSeC-main\passwd\admin_users.txt"    # File containing admin usernames, one per line
-$allUsersPath = "C:\Program Files (x86)\Rea1tek\IRSeC-main\passwd\all_users.txt"           # File containing all users to be kept in the system
+$userListPath = "C:\Program Files (x86)\Rea1tek\IRSeC-main\passwd\ausers_domain.txt"           # File containing regular usernames, one per line
+$adminUserListPath = "C:\Program Files (x86)\Rea1tek\IRSeC-main\passwd\admin_users_domain.txt"    # File containing admin usernames, one per line
+$allUsersPath = "C:\Program Files (x86)\Rea1tek\IRSeC-main\passwd\all_users_domain.txt"           # File containing all users to be kept in the system
 $passwordFilePath = "C:\Program Files (x86)\Rea1tek\IRSeC-main\passwd\password.txt"        # File containing encrypted passwords, one per line
 $passwordInUsePath = "C:\Program Files (x86)\Rea1tek\IRSeC-main\passwd\password_in_use.txt" # File to log the currently used password
 
