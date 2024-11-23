@@ -6,6 +6,9 @@ Param(
     [string]$Role
 )
 
+# Reset the firewall to defaults
+netsh advfirewall reset
+
 # Configure firewall rules based on the role
 if ($Role -eq "ad") {
     # Define allowed inbound ports
@@ -46,12 +49,12 @@ if ($Role -eq "ad") {
     New-NetFirewallRule -DisplayName "Allow Outbound SMB (TCP 445)" -Direction Outbound -Protocol TCP -RemotePort 445 -Action Allow
 
     # Block all other inbound traffic
-    Write-Output "Blocking all other inbound traffic..."
-    New-NetFirewallRule -DisplayName "Block All Other Inbound Traffic" -Direction Inbound -Action Block
+    # Write-Output "Blocking all other inbound traffic..."
+    #cNew-NetFirewallRule -DisplayName "Block All Other Inbound Traffic" -Direction Inbound -Action Block
 
     # Block all other outbound traffic (if needed, comment this out if unrestricted outbound is required)
-    Write-Output "Blocking all other outbound traffic..."
-    New-NetFirewallRule -DisplayName "Block All Other Outbound Traffic" -Direction Outbound -Action Block
+    # Write-Output "Blocking all other outbound traffic..."
+    # New-NetFirewallRule -DisplayName "Block All Other Outbound Traffic" -Direction Outbound -Action Block
 
     Write-Output "Firewall rules configured successfully."
 }
