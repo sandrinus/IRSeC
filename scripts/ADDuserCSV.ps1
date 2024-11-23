@@ -84,23 +84,41 @@ function Sync-Users {
         }
     }
 
-    # Step 2: Ensure all users in CSV exist and have the correct type and password
     foreach ($user in $users) {
-        $username = $csvUsernames.Trim()
-        $type = $user.Type.Trim()
-        $passwords = $user.Passwords.Split('|')
+        $username = $user.Username.Trim()
+        if (-not $username -or $username -eq "") {
+            Write-Host "Skipping user due to empty or invalid username."
+            continue
+        }
+    
+        # Validate and split passwords
+        if ($user.Passwords -and $user.Passwords.Trim() -ne "") {
+            $passwords = $user.Passwords.Split('|')
+        } else {
+            Write-Host "No passwords found for user $username. Skipping."
+            continue
+        }
+    
+        # Check for current password in use
         $passwordInUse = if (Test-Path $passwordInUsePath) {
             Get-Content -Path $passwordInUsePath
         } else {
             $passwords[0]
         }
-
-        # Get the next password in rotation
-        $nextPasswordIndex = ($passwords.IndexOf($passwordInUse) + 1) % $passwords.Count
-        $newPassword = ConvertTo-SecureString $passwords[$nextPasswordIndex] -AsPlainText -Force
-
-        if (-not (Get-ADUser -Filter { SamAccountName -eq $username })) {
-            # Create new user
+    
+        # Determine the next password
+        if ($passwordInUse -and $passwords -and $passwords.Contains($passwordInUse)) {
+            $nextPasswordIndex = ($passwords.IndexOf($passwordInUse) + 1) % $passwords.Count
+            $newPassword = ConvertTo-SecureString $passwords[$nextPasswordIndex] -AsPlainText -Force
+        } else {
+            Write-Host "Invalid password or no rotation for user $username. Skipping."
+            continue
+        }
+    
+        # Check if user exists in AD
+        $adUser = Get-ADUser -Filter "SamAccountName -eq '$username'" -ErrorAction SilentlyContinue
+        if (-not $adUser) {
+            # User does not exist; create the user
             New-ADUser -SamAccountName $username `
                        -UserPrincipalName "$username@$domain" `
                        -Name $username `
@@ -109,23 +127,18 @@ function Sync-Users {
                        -AccountPassword $newPassword `
                        -Enabled $true `
                        -PassThru -ErrorAction Stop
-            if ($type -eq "admin") {
-                Add-ADGroupMember -Identity "Domain Admins" -Members $username
-                Write-Host "Created admin user $username."
-            } else {
-                Write-Host "Created regular user $username."
-            }
+            Write-Host "Created user $username."
         } else {
             # Update existing user's password
             Set-ADAccountPassword -Identity $username -NewPassword $newPassword -Reset
             Unlock-ADAccount -Identity $username
-            Write-Host "Updated password for $username."
+            Write-Host "Updated password for user $username."
         }
     }
-
-    # Log the currently used password in password_in_use.txt
+    
+    # Update the password_in_use.txt file
     $passwords[$nextPasswordIndex] | Out-File -FilePath $passwordInUsePath -Force
-    Write-Host "Password in use updated to: $($passwords[$nextPasswordIndex])"
+    Write-Host "Password in use updated to: $($passwords[$nextPasswordIndex])"    
 }
 
 # Infinite loop to synchronize users every 30 minutes
